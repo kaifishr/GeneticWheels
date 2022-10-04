@@ -1,3 +1,3 @@
 # GeneticWheels
 
-Reinventing the wheel with genetic optimization.
+Rediscovering the wheel with genetic optimization.
