@@ -1,2 +1,3 @@
 # GeneticWheels
-Genetic optimization algorithm for the evolution of wheels.
+
+Reinventing the wheel with genetic optimization.
