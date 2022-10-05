@@ -4,7 +4,7 @@ import random
 
 import numpy as np
 
-from Box2D.examples.framework import (Framework, main)
+from Box2D.examples.framework import Framework
 from Box2D import (b2EdgeShape, b2FixtureDef, b2PolygonShape)
 # from simple_framework import SimpleFramework
 from Box2D.Box2D import b2World, b2Vec2, b2Body, b2Filter
@@ -12,6 +12,9 @@ from Box2D.Box2D import b2World, b2Vec2, b2Body, b2Filter
 from torch.utils.tensorboard import SummaryWriter
 
 from src.config import Config
+
+np.random.seed(0)
+random.seed(0)
 
 
 class InclinedPlane:
@@ -202,7 +205,7 @@ class GeneticWheels(Framework):
         """
         scores = [wheel.body.position.x for wheel in self.wheels]
         idx_best = np.argmax(scores)
-        return idx_best, scores[idx_best]
+        return idx_best, scores[idx_best] + self.config.env.wheel.init_position.x
 
     def is_awake(self) -> bool:
         """Checks if wheels in simulation are awake.
@@ -227,14 +230,18 @@ class GeneticWheels(Framework):
     def Step(self, settings):
         super(GeneticWheels, self).Step(settings)
 
+        t_0 = time.time()
+
         if not self.is_awake() or (self.iteration + 1) % self.n_max_iterations == 0:
             idx_best, max_score = self.comp_fitness()
             self.mutate(idx_best)
             self.reset()
 
             self.writer.add_scalar("Score", max_score, self.generation)
+            self.writer.add_scalar("Time_Generation", time.time() - t_0, self.generation)
 
             self.iteration = 0
             self.generation += 1
+
 
         self.iteration += 1

@@ -2,7 +2,7 @@ optimizer:
   n_wheels: 32
   n_max_iterations: 2000
   mutation_probability: 0.5
-  mutation_rate: 0.01
+  mutation_rate: 0.05
 env: 
   gravity: 
     x: 0.0                           # [m / s^2]
