@@ -5,7 +5,7 @@ import random
 import numpy as np
 
 from Box2D.examples.framework import (Framework, main)
-from Box2D import (b2CircleShape, b2EdgeShape, b2FixtureDef, b2PolygonShape)
+from Box2D import (b2EdgeShape, b2FixtureDef, b2PolygonShape)
 # from simple_framework import SimpleFramework
 from Box2D.Box2D import b2World, b2Vec2, b2Body, b2Filter
 
@@ -36,16 +36,23 @@ class InclinedPlane:
 class Wheel:
     """Wheel class.
 
-    Creates 16-sided polygon in shape of square to body.
+    Creates convex 16-sided polygon in shape of square to body.
     Wheels are initially approximated as squares.
     
     """
-    vertices = [
+    _vertices = [
         (-0.5, -0.5), (-0.5, -0.25),  (-0.5, 0.0),  (-0.5, 0.25),
         (-0.5, 0.5),  (-0.25, 0.5),  (0.0, 0.5),  (0.25, 0.5),
         (0.5, 0.5),  (0.5, 0.25),  (0.5, 0.0),  (0.5, -0.25),
         (0.5, -0.5),  (0.25, -0.5),  (0.0, -0.5),  (-0.25, -0.5)
     ]
+    # d = 0.25
+    # vertices = [
+    #     (-0.5, -0.5), (-0.5 + d, -0.25),  (-0.5, 0.0),  (-0.5 + d, 0.25),
+    #     (-0.5, 0.5),  (-0.25, 0.5 + d),  (0.0, 0.5),  (0.25, 0.5 + d),
+    #     (0.5, 0.5),  (0.5 + d, 0.25),  (0.5, 0.0),  (0.5 + d, -0.25),
+    #     (0.5, -0.5),  (0.25, -0.5 + d),  (0.0, -0.5),  (-0.25, -0.5 + d)
+    # ]
 
     def __init__(self, world: b2World, config: Config):
         """Initializes the wheel class."""
@@ -75,18 +82,19 @@ class Wheel:
             angle = self.init_angle
         )
 
-        self._add_wheel()
-
-    def _add_wheel(self) -> None:
-        """Adds 16-sided polygon in shape of square to body."""
-        vertices = [(self.diam * x, self.diam * y) for (x, y) in self.vertices]
-        fixture_def = b2FixtureDef(
-            shape=b2PolygonShape(vertices=vertices), 
+        self.vertices = self.get_vertices()
+        self.fixture_def = b2FixtureDef(
+            shape=b2PolygonShape(vertices=self.vertices),
             density=self.density,
             friction=self.friction,
             filter=b2Filter(groupIndex=-1)
         )
-        self.body.CreateFixture(fixture_def)
+
+        self.fixture = self.body.CreateFixture(self.fixture_def)
+
+    def get_vertices(self) -> list:
+        """Creates base vertices for wheel."""
+        return [(self.diam * x, self.diam * y) for (x, y) in self._vertices]
 
     def reset(self, noise: bool = False) -> None:
         """Resets wheel to initial position and velocity.
@@ -122,6 +130,21 @@ class Wheel:
         self.body.angularVelocity = init_angular_velocity
         self.body.angle = init_angle
 
+    def mutate(self, vertices: list) -> None:
+        """Mutates wheel's vertices."""
+        self.body.DestroyFixture(self.fixture)
+        eta = 1e-2
+        self.vertices = [(eta * random.gauss(0, 1) + x, eta * random.gauss(0, 1) + y) for (x, y) in vertices]
+        fixture_def = b2FixtureDef(
+            shape=b2PolygonShape(vertices=self.vertices), 
+            density=1,
+            filter=b2Filter(groupIndex=-1),
+        )
+        self.body.CreateFixture(fixture_def)
+
+        for fixture in self.body.fixtures:
+            print(sum([1 for _ in fixture.shape]))
+
 
 class GeneticWheels(Framework):
 # class GeneticWheels(SimpleFramework):
@@ -150,43 +173,6 @@ class GeneticWheels(Framework):
         for wheel in self.wheels:
             wheel.reset()
     
-    # def _reset_objects(self):
-    #     self._reset_bullet()
-    #     self._reset_circles()
-
-    # def _reset_bullet(self):
-    #     self.bullet.DestroyFixture(self.bullet_fixture)
-    #     self.bullet.CreateFixture(self.fixture_def)
-    #     self.bullet.transform = [self.init_position, 0]
-    #     self.bullet.linearVelocity = self.init_speed
-    #     self.bullet.angularVelocity = 0.0
-
-    # def _reset_circles(self):
-    #     for circle, (x, y) in zip(self.circles, self.position):
-    #         circle.transform = [(x, y), 0.0]
-    #         circle.linearVelocity = (0.0, 0.0)
-    #         circle.angularVelocity = 0.0
-
-    # def _create_circle(self, pos):
-    #     fixture = b2FixtureDef(shape=b2CircleShape(radius=self.circle_radius, pos=(0, 0)), 
-    #                            density=self.circle_density, 
-    #                            friction=self.circle_friction)
-
-    #     self.circles.append(self.world.CreateDynamicBody(position=pos, fixtures=fixture))
-
-    # def _generate_population(self):
-    #     for _ in range(self.population_size):
-    #         self.individuals.append(self.vertices)
-
-    # def _mutate(self):
-    #     buffer = list()
-    #     for vertices in self.individuals:
-    #         buffer.append([tuple((num + 10*np.random.uniform(-1, 1)) for num in item) for item in vertices])
-    #     self.individuals = buffer
-
-    # def _set_fixture_def(self):
-    #     self.fixture_def = b2FixtureDef(shape=b2PolygonShape(vertices=self.vertices), density=self.density)
-
     def comp_fitness(self) -> float:
         """Computes maximum fitness of wheels.
 
@@ -200,7 +186,9 @@ class GeneticWheels(Framework):
         Returns:
             List holding fitness scores.
         """
-        return max([wheel.body.position.x for wheel in self.wheels])
+        scores = [wheel.body.position.x for wheel in self.wheels]
+        idx_best = np.argmax(scores)
+        return idx_best, scores[idx_best]
 
     def is_awake(self) -> bool:
         """Checks if wheels in simulation are awake.
@@ -214,12 +202,21 @@ class GeneticWheels(Framework):
 
         return False
 
+    def mutate(self, idx_best: int) -> None:
+        """Mutates vertices of wheels."""
+        # Get vertices of best wheel:
+        vertices = self.wheels[idx_best].vertices
+        # Pass best vertices to all wheels
+        for wheel in self.wheels:
+            wheel.mutate(vertices)
+
     def Step(self, settings):
         super(GeneticWheels, self).Step(settings)
 
         if not self.is_awake() or (self.iteration + 1) % self.n_max_iterations == 0:
-            max_fitness = self.comp_fitness()
-            self.writer.add_scalar("Fitness", max_fitness, self.generation)
+            idx_best, max_score = self.comp_fitness()
+            self.mutate(idx_best)
+            self.writer.add_scalar("Score", max_score, self.generation)
             self.reset()
             self.iteration = 0
             self.generation += 1

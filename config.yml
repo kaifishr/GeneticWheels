@@ -1,5 +1,5 @@
 optimizer:
-  n_wheels: 4
+  n_wheels: 32
   n_max_iterations: 500
   mutation_probability: 0.1
   mutation_rate: 0.1
@@ -9,17 +9,17 @@ env:
     y: -9.81                         # [m / s^2]
   inclined_plane:
     inclination: 20
-    x_0: -10.0
-    y_0: 5.0
-    x_1: 10.0
+    x_0: -30.0
+    y_0: 3.0
+    x_1: 30.0
     y_1: 0.0
   wheel:
     diam: 2.0
     density: 1.0
-    friction: 1.0
+    friction: 2.0
     init_position: 
-      x: -9.0                       # [m]
-      y: 15.0                      # [m]
+      x: -29.0                       # [m]
+      y: 7.0                      # [m]
     init_linear_velocity: 
       x: 0.0                       # [m / s]
       y: -10.0                     # [m / s]
