@@ -104,26 +104,25 @@ class Wheel:
         init_angular_velocity = self.init_angular_velocity
         init_angle = self.init_angle
 
-        noise = self.config.env.wheel.noise
+        # noise = self.config.env.wheel.noise
+        # if noise:
+        #     # Position
+        #     noise_x = random.gauss(mu=0.0, sigma=noise.position.x)
+        #     noise_y = random.gauss(mu=0.0, sigma=noise.position.y)
+        #     init_position += (noise_x, noise_y)
 
-        if noise:
-            # Position
-            noise_x = random.gauss(mu=0.0, sigma=noise.position.x)
-            noise_y = random.gauss(mu=0.0, sigma=noise.position.y)
-            init_position += (noise_x, noise_y)
+        #     # Linear velocity
+        #     noise_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
+        #     noise_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
+        #     init_linear_velocity += (noise_x, noise_y)
 
-            # Linear velocity
-            noise_x = random.gauss(mu=0.0, sigma=noise.linear_velocity.x)
-            noise_y = random.gauss(mu=0.0, sigma=noise.linear_velocity.y)
-            init_linear_velocity += (noise_x, noise_y)
+        #     # Angular velocity
+        #     noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
+        #     init_angular_velocity += noise_angular_velocity
 
-            # Angular velocity
-            noise_angular_velocity = random.gauss(mu=0.0, sigma=noise.angular_velocity)
-            init_angular_velocity += noise_angular_velocity
-
-            # Angle
-            noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
-            init_angle += (noise_angle * math.pi) / 180.0
+        #     # Angle
+        #     noise_angle = random.gauss(mu=0.0, sigma=noise.angle)
+        #     init_angle += (noise_angle * math.pi) / 180.0
 
         self.body.position = init_position
         self.body.linearVelocity = init_linear_velocity
@@ -133,17 +132,32 @@ class Wheel:
     def mutate(self, vertices: list) -> None:
         """Mutates wheel's vertices."""
         self.body.DestroyFixture(self.fixture)
-        eta = 1e-2
-        self.vertices = [(eta * random.gauss(0, 1) + x, eta * random.gauss(0, 1) + y) for (x, y) in vertices]
-        fixture_def = b2FixtureDef(
-            shape=b2PolygonShape(vertices=self.vertices), 
-            density=1,
-            filter=b2Filter(groupIndex=-1),
-        )
-        self.body.CreateFixture(fixture_def)
 
-        for fixture in self.body.fixtures:
-            print(sum([1 for _ in fixture.shape]))
+        p = self.config.optimizer.mutation_probability
+        rho = self.config.optimizer.mutation_rate
+
+        def _mutate(x: float) -> float:
+            return x + (random.random() < p) * random.gauss(0, rho)
+
+        def _clip(x: float) -> float:
+            return min(x, 0.5 * self.diam)
+
+        # Mutate vertices
+        self.vertices = [(_mutate(x), _mutate(y)) for (x, y) in vertices]
+
+        # Keep wheels from getting too big
+        self.vertices = [(_clip(x), _clip(y)) for (x, y) in self.vertices]
+
+        fixture_def = b2FixtureDef(
+            shape=b2PolygonShape(vertices=self.vertices),
+            density=self.density,
+            friction=self.friction,
+            filter=b2Filter(groupIndex=-1)
+        )
+        self.fixture = self.body.CreateFixture(fixture_def)
+
+        # for fixture in self.body.fixtures:
+        #     print(sum([1 for _ in fixture.shape]))
 
 
 class GeneticWheels(Framework):
@@ -216,8 +230,10 @@ class GeneticWheels(Framework):
         if not self.is_awake() or (self.iteration + 1) % self.n_max_iterations == 0:
             idx_best, max_score = self.comp_fitness()
             self.mutate(idx_best)
-            self.writer.add_scalar("Score", max_score, self.generation)
             self.reset()
+
+            self.writer.add_scalar("Score", max_score, self.generation)
+
             self.iteration = 0
             self.generation += 1
 

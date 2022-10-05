@@ -1,8 +1,8 @@
 optimizer:
   n_wheels: 32
-  n_max_iterations: 500
-  mutation_probability: 0.1
-  mutation_rate: 0.1
+  n_max_iterations: 2000
+  mutation_probability: 0.5
+  mutation_rate: 0.01
 env: 
   gravity: 
     x: 0.0                           # [m / s^2]
@@ -18,7 +18,7 @@ env:
     density: 1.0
     friction: 2.0
     init_position: 
-      x: -29.0                       # [m]
+      x: -28.0                       # [m]
       y: 7.0                      # [m]
     init_linear_velocity: 
       x: 0.0                       # [m / s]
@@ -27,8 +27,8 @@ env:
     init_angle: 0.0                   # deg 
     noise: 
       position: 
-        x: 0.10                       # Standard deviation [m]
-        y: 0.10                       # Standard deviation [m]
+        x: 0.0                       # Standard deviation [m]
+        y: 0.0                       # Standard deviation [m]
       linear_velocity: 
         x: 0.0                        # Standard deviation [m / s]
         y: 0.0                        # Standard deviation [m / s]
