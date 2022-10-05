@@ -1,6 +1,6 @@
 optimizer:
   n_wheels: 4
-  n_iterations: 100
+  n_max_iterations: 500
   mutation_probability: 0.1
   mutation_rate: 0.1
 env: 
@@ -19,7 +19,7 @@ env:
     friction: 1.0
     init_position: 
       x: -9.0                       # [m]
-      y: 10.0                      # [m]
+      y: 15.0                      # [m]
     init_linear_velocity: 
       x: 0.0                       # [m / s]
       y: -10.0                     # [m / s]

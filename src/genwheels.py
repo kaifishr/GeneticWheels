@@ -132,6 +132,7 @@ class GeneticWheel(Framework):
 
         self.config = config
         n_wheels = config.optimizer.n_wheels
+        self.n_max_iterations = config.optimizer.n_max_iterations
 
         self.world.gravity = (self.config.env.gravity.x, self.config.env.gravity.y)
         self.wheels = [Wheel(world=self.world, config=self.config) for _ in range(n_wheels)]
@@ -141,9 +142,12 @@ class GeneticWheel(Framework):
 
         self.iteration = 0
 
-    def reset(self):
+    def reset(self) -> None:
+        """Resets all wheels to initial parameter.
+        """
         for wheel in self.wheels:
             wheel.reset()
+    
     # def _reset_objects(self):
     #     self._reset_bullet()
     #     self._reset_circles()
@@ -181,10 +185,29 @@ class GeneticWheel(Framework):
     # def _set_fixture_def(self):
     #     self.fixture_def = b2FixtureDef(shape=b2PolygonShape(vertices=self.vertices), density=self.density)
 
+    def is_active(self) -> bool:
+        """Checks if simulation is active.
+
+        Returns: 
+            True if at least one body is awake.
+        """
+        for wheel in self.wheels:
+            if wheel.body.awake:
+                return True
+            # if sum(abs(wheel.body.linearVelocity)) > 0:
+            #     return True
+
+        return False
+
+
     def Step(self, settings):
-        t0 = time.time()
         super(GeneticWheel, self).Step(settings)
-        if self.iteration % 300 == 0:
+
+        if (self.iteration + 1) % self.n_max_iterations == 0:
             self.reset()
-        print(time.time() - t0)
+
+        if not self.is_active():
+            self.reset()
+            self.iteration += 0
+
         self.iteration += 1
