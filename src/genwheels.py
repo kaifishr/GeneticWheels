@@ -9,6 +9,8 @@ from Box2D import (b2CircleShape, b2EdgeShape, b2FixtureDef, b2PolygonShape)
 # from simple_framework import SimpleFramework
 from Box2D.Box2D import b2World, b2Vec2, b2Body, b2Filter
 
+from torch.utils.tensorboard import SummaryWriter
+
 from src.config import Config
 
 
@@ -121,8 +123,8 @@ class Wheel:
         self.body.angle = init_angle
 
 
-class GeneticWheel(Framework):
-# class Bullet(SimpleFramework):
+class GeneticWheels(Framework):
+# class GeneticWheels(SimpleFramework):
 
     name = "Genetic Wheels"
     description = "Rediscovering the wheel with genetic optimization."
@@ -138,9 +140,9 @@ class GeneticWheel(Framework):
         self.wheels = [Wheel(world=self.world, config=self.config) for _ in range(n_wheels)]
         self.inclined_plane = InclinedPlane(world=self.world, config=self.config)
 
-        self.fitness = []
-
+        self.writer = SummaryWriter()
         self.iteration = 0
+        self.generation = 0
 
     def reset(self) -> None:
         """Resets all wheels to initial parameter.
@@ -185,8 +187,23 @@ class GeneticWheel(Framework):
     # def _set_fixture_def(self):
     #     self.fixture_def = b2FixtureDef(shape=b2PolygonShape(vertices=self.vertices), density=self.density)
 
-    def is_active(self) -> bool:
-        """Checks if simulation is active.
+    def comp_fitness(self) -> float:
+        """Computes maximum fitness of wheels.
+
+        The fitness is determined by the vertical
+        distance traveled by the wheel.
+
+        This method is called after wheels have stoped
+        moving or if maximum number of iterations is 
+        reached.
+        
+        Returns:
+            List holding fitness scores.
+        """
+        return max([wheel.body.position.x for wheel in self.wheels])
+
+    def is_awake(self) -> bool:
+        """Checks if wheels in simulation are awake.
 
         Returns: 
             True if at least one body is awake.
@@ -194,20 +211,17 @@ class GeneticWheel(Framework):
         for wheel in self.wheels:
             if wheel.body.awake:
                 return True
-            # if sum(abs(wheel.body.linearVelocity)) > 0:
-            #     return True
 
         return False
 
-
     def Step(self, settings):
-        super(GeneticWheel, self).Step(settings)
+        super(GeneticWheels, self).Step(settings)
 
-        if (self.iteration + 1) % self.n_max_iterations == 0:
+        if not self.is_awake() or (self.iteration + 1) % self.n_max_iterations == 0:
+            max_fitness = self.comp_fitness()
+            self.writer.add_scalar("Fitness", max_fitness, self.generation)
             self.reset()
-
-        if not self.is_active():
-            self.reset()
-            self.iteration += 0
+            self.iteration = 0
+            self.generation += 1
 
         self.iteration += 1
