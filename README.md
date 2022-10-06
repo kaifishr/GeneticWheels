@@ -5,6 +5,7 @@ Rediscovering the wheel with genetic optimization.
 # Method
 
 - Gentic optimization method.
+- Rendering can be turned off by pressing 'Space' to accelerate optimization.
 
 # Experiments
 
@@ -21,7 +22,6 @@ Rediscovering the wheel with genetic optimization.
 - Add some text to readme.
 - Add more efficient rendering method.
     - Use simple framework to turn off rendering.
-- Select for wheel who fastest travels down inclined plane.
 
 # License
 
