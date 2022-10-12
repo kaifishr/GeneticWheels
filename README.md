@@ -17,7 +17,7 @@ The rendering can be turned off by pressing the spacebar to speed up the optimiz
 
 With a population size of $32$ wheels, a mutation probability of $0.5$, and a mutation rate of $0.04$, the initial configuration of squares evolves in about 750 generations into roundish polygons that can roll down the inclined plane without difficulty. 
 
-![](docs/score.png)
+![](docs/fitness_score.png)
 
 # License
 
