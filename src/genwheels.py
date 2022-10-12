@@ -44,6 +44,18 @@ class GeneticWheels(Framework):
         for wheel in self.wheels:
             wheel.reset()
 
+    def is_awake(self) -> bool:
+        """Checks if wheels in simulation are awake.
+
+        Returns:
+            True if at least one body is awake.
+        """
+        for wheel in self.wheels:
+            if wheel.body.awake:
+                return True
+
+        return False
+
     def comp_fitness(self) -> float:
         """Computes maximum fitness of wheels.
 
@@ -61,22 +73,11 @@ class GeneticWheels(Framework):
         idx_best = np.argmax(scores)
         return idx_best, scores[idx_best] - self.config.env.wheel.init_position.x
 
-    def is_awake(self) -> bool:
-        """Checks if wheels in simulation are awake.
-
-        Returns:
-            True if at least one body is awake.
-        """
-        for wheel in self.wheels:
-            if wheel.body.awake:
-                return True
-
-        return False
-
     def mutate(self, idx_best: int) -> None:
         """Mutates vertices of wheels."""
-        # Get vertices of best wheel:
+        # Get vertices of best wheel
         vertices = self.wheels[idx_best].vertices
+
         # Pass best vertices to all wheels
         for wheel in self.wheels:
             wheel.mutate(vertices)

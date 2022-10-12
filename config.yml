@@ -1,13 +1,13 @@
 seed: 0
 optimizer:
   n_wheels: 32
-  n_max_iterations: 2000
-  mutation_probability: 0.5
-  mutation_rate: 0.16
+  n_max_iterations: 1000
+  mutation_probability: 0.2
+  mutation_rate: 0.04
 env: 
   gravity: 
-    x: 0.0                           # [m / s^2]
-    y: -9.81                         # [m / s^2]
+    x: 0.0
+    y: -9.81
   inclined_plane:
     inclination: 20
     x_0: -30.0
@@ -15,23 +15,14 @@ env:
     x_1: 30.0
     y_1: 0.0
   wheel:
-    diam: 2.0
+    diam: 4.0
     density: 1.0
     friction: 2.0
     init_position: 
-      x: -26.0                       # [m]
-      y: 6.0                      # [m]
-    init_linear_velocity: 
-      x: 0.0                       # [m / s]
-      y: -10.0                     # [m / s]
-    init_angular_velocity: 0.0            # [rad / s]
-    init_angle: 0.0                   # deg 
-    noise: 
-      position: 
-        x: 0.0                       # Standard deviation [m]
-        y: 0.0                       # Standard deviation [m]
-      linear_velocity: 
-        x: 0.0                        # Standard deviation [m / s]
-        y: 0.0                        # Standard deviation [m / s]
-      angular_velocity: 0.0             # Standard deviation [rad / s]
-      angle: 0.0                      # Standard deviation [deg]
+      x: -26.0
+      y: 6.0
+    init_linear_velocity:
+      x: 0.0
+      y: -10.0
+    init_angular_velocity: 0.0
+    init_angle: 0.0
